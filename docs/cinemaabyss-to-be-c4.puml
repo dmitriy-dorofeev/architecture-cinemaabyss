@@ -1,0 +1,42 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LANDSCAPE()
+LAYOUT_WITH_LEGEND()
+
+skinparam defaultFontName Arial
+skinparam wrapWidth 260
+skinparam maxMessageSize 120
+
+title КиноБездна — целевая архитектура\nC4: контейнерная диаграмма
+
+Person(user, "Пользователь", "Работает с сервисами через единый API")
+
+System_Boundary(cinemaabyss, "Система «КиноБездна»") {
+    Container(gateway, "API Gateway", "Go, HTTP reverse proxy", "Единая точка входа. Маршрутизирует запросы и управляет постепенной миграцией")
+    Container(monolith, "Монолит", "Go", "Пользователи, платежи и подписки")
+    Container(movies, "Movies Service", "Go", "Метаданные фильмов, жанры и рейтинги")
+    Container(events, "Events Service", "Go, Kafka client", "Принимает, публикует и обрабатывает события")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL 14", "Пользователи, фильмы, платежи и подписки")
+    ContainerQueue(kafka, "Kafka", "Message broker", "Топики movie-events, user-events и payment-events")
+    Container(zookeeper, "Zookeeper", "Coordination service", "Координация брокера Kafka")
+}
+
+Rel(user, gateway, "Запросы к API", "HTTP/REST")
+Rel(gateway, monolith, "Пользователи, платежи, подписки", "HTTP/REST")
+Rel(gateway, movies, "Фильмы", "HTTP/REST")
+Rel(gateway, events, "Создание событий", "HTTP/REST")
+Rel(monolith, postgres, "Чтение и запись", "SQL")
+Rel(movies, postgres, "Чтение и запись", "SQL")
+Rel(events, kafka, "Публикация событий", "Kafka, async")
+Rel(kafka, events, "Доставка событий consumer", "Kafka, async")
+Rel(kafka, zookeeper, "Координация")
+
+note right of gateway
+Strangler Fig:
+GRADUAL_MIGRATION и MOVIES_MIGRATION_PERCENT
+управляют переключением /api/movies
+между монолитом и Movies Service
+end note
+
+@enduml
