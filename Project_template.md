@@ -362,6 +362,12 @@ minikube tunnel
 https://cinemaabyss.example.com/api/movies
 и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
 
+Результат проверки: 22 запроса и 42 проверки выполнены успешно.
+
+![Развертывание Helm](docs/images/task4-helm-deploy.png)
+
+![Список фильмов после установки Helm](docs/images/task4-movies.png)
+
 ## Удаляем все
 
 ```bash
